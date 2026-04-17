@@ -3,26 +3,25 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Service;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ServiceController extends Controller
 {
-    // GET all services
-    public function index()
+    public function index(): JsonResponse
     {
         return response()->json(Service::all());
     }
 
-    // CREATE new service
-    public function store(Request $request)
-    {
-        $service = Service::create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'icon' => $request->icon
-        ]);
+   public function store(Request $request)
+{
+    $service = Service::create([
+        'title' => $request->title,
+        'description' => $request->description,
+        'icon' => $request->icon
+    ]);
 
-        return response()->json($service, 201);
-    }
+    return response()->json($service, 201);
+}
 }
