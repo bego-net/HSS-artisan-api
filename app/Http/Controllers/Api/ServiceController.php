@@ -9,6 +9,12 @@ use Illuminate\Http\Request;
 
 class ServiceController extends Controller
 {
+    private function isAdmin(Request $request): bool
+    {
+        $user = $request->user();
+        return ($user?->role ?? null) === 'admin' || (bool) ($user?->is_admin ?? false);
+    }
+
     public function index(): JsonResponse
     {
         return response()->json([
@@ -20,6 +26,13 @@ class ServiceController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! $this->isAdmin($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Forbidden. Admin access required.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
@@ -55,6 +68,13 @@ class ServiceController extends Controller
 
     public function update(Request $request, string $id): JsonResponse
     {
+        if (! $this->isAdmin($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Forbidden. Admin access required.',
+            ], 403);
+        }
+
         $service = Service::find($id);
 
         if (! $service) {
@@ -81,6 +101,13 @@ class ServiceController extends Controller
 
     public function destroy(string $id): JsonResponse
     {
+        if (! $this->isAdmin(request())) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Forbidden. Admin access required.',
+            ], 403);
+        }
+
         $service = Service::find($id);
 
         if (! $service) {
