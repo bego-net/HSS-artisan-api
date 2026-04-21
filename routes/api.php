@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/services/{id}', [ServiceController::class, 'show']);
+Route::get('/services/slug/{slug}', [ServiceController::class, 'showBySlug']);
 
 // Contact form (public — no auth required)
 Route::post('/contact', [ContactController::class, 'store']);

@@ -66,6 +66,28 @@ class ServiceController extends Controller
         ], 200);
     }
 
+    /**
+     * Public: Get a single service by slug.
+     * GET /api/services/slug/{slug}
+     */
+    public function showBySlug(string $slug): JsonResponse
+    {
+        $service = Service::where('slug', $slug)->first();
+
+        if (! $service) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Service not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Service retrieved successfully',
+            'data'    => $service,
+        ], 200);
+    }
+
     public function update(Request $request, string $id): JsonResponse
     {
         if (! $this->isAdmin($request)) {
