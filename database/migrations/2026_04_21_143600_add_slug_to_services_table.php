@@ -9,15 +9,21 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Step 1: Add nullable slug column (no unique yet)
         Schema::table('services', function (Blueprint $table) {
-            $table->string('slug')->unique()->after('title');
+            $table->string('slug')->nullable()->after('title');
         });
 
-        // Backfill existing rows
+        // Step 2: Backfill existing rows
         foreach (\App\Models\Service::all() as $service) {
             $service->slug = Str::slug($service->title);
-            $service->save();
+            $service->saveQuietly();
         }
+
+        // Step 3: Now make it unique
+        Schema::table('services', function (Blueprint $table) {
+            $table->string('slug')->unique()->nullable(false)->change();
+        });
     }
 
     public function down(): void
