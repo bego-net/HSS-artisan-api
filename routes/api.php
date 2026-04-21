@@ -31,6 +31,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     // Services CRUD
     Route::post('/services', [ServiceController::class, 'store']);
     Route::put('/services/{id}', [ServiceController::class, 'update']);
+    Route::post('/services/{id}', [ServiceController::class, 'update']);  // for multipart file uploads
     Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
 
     // Contacts management

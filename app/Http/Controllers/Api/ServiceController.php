@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Service;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ServiceController extends Controller
 {
@@ -15,15 +16,21 @@ class ServiceController extends Controller
         return ($user?->role ?? null) === 'admin' || (bool) ($user?->is_admin ?? false);
     }
 
+    /**
+     * Public: List all services.
+     */
     public function index(): JsonResponse
     {
         return response()->json([
             'success' => true,
             'message' => 'Services retrieved successfully',
-            'data' => Service::all(),
+            'data'    => Service::all(),
         ], 200);
     }
 
+    /**
+     * Admin: Create a new service (supports image upload).
+     */
     public function store(Request $request): JsonResponse
     {
         if (! $this->isAdmin($request)) {
@@ -34,20 +41,30 @@ class ServiceController extends Controller
         }
 
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
+            'title'       => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
-            'icon' => ['nullable', 'string'],
+            'content'     => ['nullable', 'string'],
+            'icon'        => ['nullable', 'string'],
+            'image'       => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
         ]);
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('services', 'public');
+        }
 
         $service = Service::create($validated);
 
         return response()->json([
             'success' => true,
             'message' => 'Service created successfully',
-            'data' => $service,
+            'data'    => $service,
         ], 201);
     }
 
+    /**
+     * Public: Get a single service by ID.
+     */
     public function show(string $id): JsonResponse
     {
         $service = Service::find($id);
@@ -62,13 +79,12 @@ class ServiceController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Service retrieved successfully',
-            'data' => $service,
+            'data'    => $service,
         ], 200);
     }
 
     /**
      * Public: Get a single service by slug.
-     * GET /api/services/slug/{slug}
      */
     public function showBySlug(string $slug): JsonResponse
     {
@@ -88,6 +104,9 @@ class ServiceController extends Controller
         ], 200);
     }
 
+    /**
+     * Admin: Update a service (supports image upload).
+     */
     public function update(Request $request, string $id): JsonResponse
     {
         if (! $this->isAdmin($request)) {
@@ -107,20 +126,33 @@ class ServiceController extends Controller
         }
 
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
+            'title'       => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
-            'icon' => ['nullable', 'string'],
+            'content'     => ['nullable', 'string'],
+            'icon'        => ['nullable', 'string'],
+            'image'       => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
         ]);
+
+        // Handle image upload — delete old file if replacing
+        if ($request->hasFile('image')) {
+            if ($service->image && Storage::disk('public')->exists($service->image)) {
+                Storage::disk('public')->delete($service->image);
+            }
+            $validated['image'] = $request->file('image')->store('services', 'public');
+        }
 
         $service->update($validated);
 
         return response()->json([
             'success' => true,
             'message' => 'Service updated successfully',
-            'data' => $service,
+            'data'    => $service->fresh(),
         ], 200);
     }
 
+    /**
+     * Admin: Delete a service (also removes its image).
+     */
     public function destroy(string $id): JsonResponse
     {
         if (! $this->isAdmin(request())) {
@@ -139,12 +171,17 @@ class ServiceController extends Controller
             ], 404);
         }
 
+        // Delete image file if it exists
+        if ($service->image && Storage::disk('public')->exists($service->image)) {
+            Storage::disk('public')->delete($service->image);
+        }
+
         $service->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Service deleted successfully',
-            'data' => null,
+            'data'    => null,
         ], 200);
     }
 }
