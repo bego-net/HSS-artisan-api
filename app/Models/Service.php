@@ -11,17 +11,38 @@ class Service extends Model
 
     protected $appends = ['image_url'];
 
+    /**
+     * Generate a unique slug, appending a numeric suffix on collision.
+     */
+    protected static function generateUniqueSlug(string $title, ?int $ignoreId = null): string
+    {
+        $slug = Str::slug($title);
+        $original = $slug;
+        $counter = 2;
+
+        while (static::query()
+            ->where('slug', $slug)
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->exists()
+        ) {
+            $slug = $original . '-' . $counter;
+            $counter++;
+        }
+
+        return $slug;
+    }
+
     protected static function booted(): void
     {
         static::creating(function (Service $service) {
             if (empty($service->slug)) {
-                $service->slug = Str::slug($service->title);
+                $service->slug = static::generateUniqueSlug($service->title);
             }
         });
 
         static::updating(function (Service $service) {
             if ($service->isDirty('title') && ! $service->isDirty('slug')) {
-                $service->slug = Str::slug($service->title);
+                $service->slug = static::generateUniqueSlug($service->title, $service->id);
             }
         });
     }

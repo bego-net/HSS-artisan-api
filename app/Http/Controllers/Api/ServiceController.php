@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Service;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -53,7 +54,15 @@ class ServiceController extends Controller
             $validated['image'] = $request->file('image')->store('services', 'public');
         }
 
-        $service = Service::create($validated);
+        try {
+            $service = Service::create($validated);
+        } catch (UniqueConstraintViolationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A service with this title (or slug) already exists. Please use a different title.',
+                'errors'  => ['title' => ['A service with this title already exists.']],
+            ], 422);
+        }
 
         return response()->json([
             'success' => true,
@@ -141,7 +150,15 @@ class ServiceController extends Controller
             $validated['image'] = $request->file('image')->store('services', 'public');
         }
 
-        $service->update($validated);
+        try {
+            $service->update($validated);
+        } catch (UniqueConstraintViolationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A service with this title (or slug) already exists. Please use a different title.',
+                'errors'  => ['title' => ['A service with this title already exists.']],
+            ], 422);
+        }
 
         return response()->json([
             'success' => true,
