@@ -61,14 +61,17 @@ class ProductionSeeder extends Seeder
             [
                 'title'       => 'Hawi ERP System',
                 'description' => 'A comprehensive enterprise resource planning solution designed for mid-sized businesses. Manage finance, HR, inventory, and operations from a single dashboard.',
+                'image'       => 'products/placeholder.png',
             ],
             [
                 'title'       => 'Hawi POS Terminal',
                 'description' => 'A modern point-of-sale system built for retail and hospitality. Fast checkout, inventory tracking, and real-time sales analytics.',
+                'image'       => 'products/placeholder.png',
             ],
             [
                 'title'       => 'Hawi CRM Platform',
                 'description' => 'Customer relationship management made simple. Track leads, manage contacts, automate follow-ups, and close deals faster.',
+                'image'       => 'products/placeholder.png',
             ],
         ];
 
@@ -82,21 +85,25 @@ class ProductionSeeder extends Seeder
                 'name'    => 'Abebe Kebede',
                 'role'    => 'CEO, TechEthiopia',
                 'message' => 'Hawi Software transformed our entire business workflow. Their custom ERP system saved us countless hours and significantly reduced operational costs.',
+                'image'   => 'testimonials/placeholder.png',
             ],
             [
                 'name'    => 'Sara Mohammed',
                 'role'    => 'CTO, DigitalAddis',
                 'message' => 'The team at Hawi delivered our mobile app ahead of schedule and exceeded all expectations. Their attention to detail and technical expertise is outstanding.',
+                'image'   => 'testimonials/placeholder.png',
             ],
             [
                 'name'    => 'Daniel Tesfaye',
                 'role'    => 'Founder, CloudNet Solutions',
                 'message' => 'Working with Hawi has been an incredible experience. They understood our vision from day one and built a platform that our customers love.',
+                'image'   => 'testimonials/placeholder.png',
             ],
             [
                 'name'    => 'Meron Hailu',
                 'role'    => 'Director, EastAfrica Logistics',
                 'message' => 'Their cloud migration service was seamless. Zero downtime, improved performance, and our infrastructure costs dropped by 40%. Highly recommended!',
+                'image'   => 'testimonials/placeholder.png',
             ],
         ];
 
@@ -106,11 +113,11 @@ class ProductionSeeder extends Seeder
 
         // ── Partners ─────────────────────────────────
         $partners = [
-            ['name' => 'TechEthiopia'],
-            ['name' => 'DigitalAddis'],
-            ['name' => 'CloudNet Solutions'],
-            ['name' => 'EastAfrica Logistics'],
-            ['name' => 'Addis Innovation Hub'],
+            ['name' => 'TechEthiopia', 'logo' => 'partners/placeholder.png'],
+            ['name' => 'DigitalAddis', 'logo' => 'partners/placeholder.png'],
+            ['name' => 'CloudNet Solutions', 'logo' => 'partners/placeholder.png'],
+            ['name' => 'EastAfrica Logistics', 'logo' => 'partners/placeholder.png'],
+            ['name' => 'Addis Innovation Hub', 'logo' => 'partners/placeholder.png'],
         ];
 
         foreach ($partners as $partner) {
