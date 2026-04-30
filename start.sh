@@ -16,6 +16,7 @@ php artisan migrate --force
 
 # Seed production data (only inserts if not already present)
 php artisan db:seed --class=ProductionSeeder --force
+php artisan db:seed --class=AdminSeeder --force
 
 # Create storage link
 php artisan storage:link 2>/dev/null || true
