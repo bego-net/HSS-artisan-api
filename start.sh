@@ -14,6 +14,9 @@ php artisan view:cache
 # Run database migrations
 php artisan migrate --force
 
+# Seed production data (only inserts if not already present)
+php artisan db:seed --class=ProductionSeeder --force
+
 # Create storage link
 php artisan storage:link 2>/dev/null || true
 
