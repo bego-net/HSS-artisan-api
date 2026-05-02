@@ -12,10 +12,10 @@ class CloudinaryService
 
     public function __construct()
     {
-        $url = env('CLOUDINARY_URL');
+        $url = config('cloudinary.url');
 
         if (! $url) {
-            throw new Exception('CLOUDINARY_URL is not set in .env');
+            throw new Exception('CLOUDINARY_URL is not configured. Set it in .env and run php artisan config:cache');
         }
 
         $this->cloudinary = new Cloudinary($url);
