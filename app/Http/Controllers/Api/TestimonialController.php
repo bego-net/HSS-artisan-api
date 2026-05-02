@@ -4,19 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Testimonial;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class TestimonialController extends Controller
 {
     public function index()
     {
         $testimonials = Testimonial::orderBy('created_at', 'desc')->get();
-
-        $testimonials->transform(function ($testimonial) {
-            $testimonial->image = asset('storage/' . $testimonial->image);
-            return $testimonial;
-        });
 
         return response()->json($testimonials);
     }
@@ -30,16 +25,16 @@ class TestimonialController extends Controller
             'image'   => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $path = $request->file('image')->store('testimonials', 'public');
+        $cloudinary = new CloudinaryService();
+        $uploaded   = $cloudinary->upload($request->file('image')->getRealPath(), 'hawi/testimonials');
 
         $testimonial = Testimonial::create([
-            'name'    => $request->name,
-            'role'    => $request->role,
-            'message' => $request->message,
-            'image'   => $path,
+            'name'      => $request->name,
+            'role'      => $request->role,
+            'message'   => $request->message,
+            'image'     => $uploaded['url'],
+            'public_id' => $uploaded['public_id'],
         ]);
-
-        $testimonial->image = asset('storage/' . $testimonial->image);
 
         return response()->json($testimonial, 201);
     }
@@ -47,7 +42,6 @@ class TestimonialController extends Controller
     public function show(string $id)
     {
         $testimonial = Testimonial::findOrFail($id);
-        $testimonial->image = asset('storage/' . $testimonial->image);
 
         return response()->json($testimonial);
     }
@@ -76,15 +70,17 @@ class TestimonialController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            if ($testimonial->image && Storage::disk('public')->exists($testimonial->image)) {
-                Storage::disk('public')->delete($testimonial->image);
-            }
-            $testimonial->image = $request->file('image')->store('testimonials', 'public');
+            // Delete old image from Cloudinary
+            $cloudinary = new CloudinaryService();
+            $cloudinary->destroy($testimonial->public_id);
+
+            // Upload new image
+            $uploaded = $cloudinary->upload($request->file('image')->getRealPath(), 'hawi/testimonials');
+            $testimonial->image     = $uploaded['url'];
+            $testimonial->public_id = $uploaded['public_id'];
         }
 
         $testimonial->save();
-
-        $testimonial->image = asset('storage/' . $testimonial->image);
 
         return response()->json($testimonial);
     }
@@ -93,9 +89,9 @@ class TestimonialController extends Controller
     {
         $testimonial = Testimonial::findOrFail($id);
 
-        if ($testimonial->image && Storage::disk('public')->exists($testimonial->image)) {
-            Storage::disk('public')->delete($testimonial->image);
-        }
+        // Delete image from Cloudinary
+        $cloudinary = new CloudinaryService();
+        $cloudinary->destroy($testimonial->public_id);
 
         $testimonial->delete();
 

@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Service;
+use App\Services\CloudinaryService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ServiceController extends Controller
 {
@@ -49,9 +49,13 @@ class ServiceController extends Controller
             'image'       => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
         ]);
 
-        // Handle image upload
+        // Handle image upload via Cloudinary
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('services', 'public');
+            $cloudinary = new CloudinaryService();
+            $uploaded   = $cloudinary->upload($request->file('image')->getRealPath(), 'hawi/services');
+
+            $validated['image']     = $uploaded['url'];
+            $validated['public_id'] = $uploaded['public_id'];
         }
 
         try {
@@ -142,12 +146,14 @@ class ServiceController extends Controller
             'image'       => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
         ]);
 
-        // Handle image upload — delete old file if replacing
+        // Handle image upload — delete old from Cloudinary, upload new
         if ($request->hasFile('image')) {
-            if ($service->image && Storage::disk('public')->exists($service->image)) {
-                Storage::disk('public')->delete($service->image);
-            }
-            $validated['image'] = $request->file('image')->store('services', 'public');
+            $cloudinary = new CloudinaryService();
+            $cloudinary->destroy($service->public_id);
+
+            $uploaded = $cloudinary->upload($request->file('image')->getRealPath(), 'hawi/services');
+            $validated['image']     = $uploaded['url'];
+            $validated['public_id'] = $uploaded['public_id'];
         }
 
         try {
@@ -168,7 +174,7 @@ class ServiceController extends Controller
     }
 
     /**
-     * Admin: Delete a service (also removes its image).
+     * Admin: Delete a service (also removes its image from Cloudinary).
      */
     public function destroy(string $id): JsonResponse
     {
@@ -188,10 +194,9 @@ class ServiceController extends Controller
             ], 404);
         }
 
-        // Delete image file if it exists
-        if ($service->image && Storage::disk('public')->exists($service->image)) {
-            Storage::disk('public')->delete($service->image);
-        }
+        // Delete image from Cloudinary
+        $cloudinary = new CloudinaryService();
+        $cloudinary->destroy($service->public_id);
 
         $service->delete();
 

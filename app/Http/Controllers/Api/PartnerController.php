@@ -4,19 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Partner;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class PartnerController extends Controller
 {
     public function index()
     {
         $partners = Partner::orderBy('created_at', 'desc')->get();
-
-        $partners->transform(function ($partner) {
-            $partner->logo = asset('storage/' . $partner->logo);
-            return $partner;
-        });
 
         return response()->json($partners);
     }
@@ -28,14 +23,14 @@ class PartnerController extends Controller
             'logo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $path = $request->file('logo')->store('partners', 'public');
+        $cloudinary = new CloudinaryService();
+        $uploaded   = $cloudinary->upload($request->file('logo')->getRealPath(), 'hawi/partners');
 
         $partner = Partner::create([
-            'name' => $request->name,
-            'logo' => $path,
+            'name'      => $request->name,
+            'logo'      => $uploaded['url'],
+            'public_id' => $uploaded['public_id'],
         ]);
-
-        $partner->logo = asset('storage/' . $partner->logo);
 
         return response()->json($partner, 201);
     }
@@ -43,7 +38,6 @@ class PartnerController extends Controller
     public function show(string $id)
     {
         $partner = Partner::findOrFail($id);
-        $partner->logo = asset('storage/' . $partner->logo);
 
         return response()->json($partner);
     }
@@ -62,15 +56,17 @@ class PartnerController extends Controller
         }
 
         if ($request->hasFile('logo')) {
-            if ($partner->logo && Storage::disk('public')->exists($partner->logo)) {
-                Storage::disk('public')->delete($partner->logo);
-            }
-            $partner->logo = $request->file('logo')->store('partners', 'public');
+            // Delete old logo from Cloudinary
+            $cloudinary = new CloudinaryService();
+            $cloudinary->destroy($partner->public_id);
+
+            // Upload new logo
+            $uploaded = $cloudinary->upload($request->file('logo')->getRealPath(), 'hawi/partners');
+            $partner->logo      = $uploaded['url'];
+            $partner->public_id = $uploaded['public_id'];
         }
 
         $partner->save();
-
-        $partner->logo = asset('storage/' . $partner->logo);
 
         return response()->json($partner);
     }
@@ -79,9 +75,9 @@ class PartnerController extends Controller
     {
         $partner = Partner::findOrFail($id);
 
-        if ($partner->logo && Storage::disk('public')->exists($partner->logo)) {
-            Storage::disk('public')->delete($partner->logo);
-        }
+        // Delete logo from Cloudinary
+        $cloudinary = new CloudinaryService();
+        $cloudinary->destroy($partner->public_id);
 
         $partner->delete();
 

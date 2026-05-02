@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class Service extends Model
 {
-    protected $fillable = ['title', 'slug', 'description', 'content', 'icon', 'image'];
+    protected $fillable = ['title', 'slug', 'description', 'content', 'icon', 'image', 'public_id'];
 
     protected $appends = ['image_url'];
 

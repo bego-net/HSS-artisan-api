@@ -10,5 +10,6 @@ class Product extends Model
         'title',
         'description',
         'image',
+        'public_id',
     ];
 }

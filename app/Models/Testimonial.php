@@ -11,5 +11,6 @@ class Testimonial extends Model
         'role',
         'message',
         'image',
+        'public_id',
     ];
 }

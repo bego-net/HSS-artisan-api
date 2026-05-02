@@ -4,19 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
     public function index()
     {
         $products = Product::orderBy('created_at', 'desc')->get();
-
-        $products->transform(function ($product) {
-            $product->image = asset('storage/' . $product->image);
-            return $product;
-        });
 
         return response()->json($products);
     }
@@ -29,15 +24,15 @@ class ProductController extends Controller
             'image'       => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $path = $request->file('image')->store('products', 'public');
+        $cloudinary = new CloudinaryService();
+        $uploaded   = $cloudinary->upload($request->file('image')->getRealPath(), 'hawi/products');
 
         $product = Product::create([
             'title'       => $request->title,
             'description' => $request->description,
-            'image'       => $path,
+            'image'       => $uploaded['url'],
+            'public_id'   => $uploaded['public_id'],
         ]);
-
-        $product->image = asset('storage/' . $product->image);
 
         return response()->json($product, 201);
     }
@@ -45,7 +40,6 @@ class ProductController extends Controller
     public function show(string $id)
     {
         $product = Product::findOrFail($id);
-        $product->image = asset('storage/' . $product->image);
 
         return response()->json($product);
     }
@@ -69,15 +63,17 @@ class ProductController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
-            }
-            $product->image = $request->file('image')->store('products', 'public');
+            // Delete old image from Cloudinary
+            $cloudinary = new CloudinaryService();
+            $cloudinary->destroy($product->public_id);
+
+            // Upload new image
+            $uploaded = $cloudinary->upload($request->file('image')->getRealPath(), 'hawi/products');
+            $product->image     = $uploaded['url'];
+            $product->public_id = $uploaded['public_id'];
         }
 
         $product->save();
-
-        $product->image = asset('storage/' . $product->image);
 
         return response()->json($product);
     }
@@ -86,9 +82,9 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        if ($product->image && Storage::disk('public')->exists($product->image)) {
-            Storage::disk('public')->delete($product->image);
-        }
+        // Delete image from Cloudinary
+        $cloudinary = new CloudinaryService();
+        $cloudinary->destroy($product->public_id);
 
         $product->delete();
 
