@@ -15,7 +15,7 @@ class CloudinaryService
         $url = config('cloudinary.url');
 
         if (! $url) {
-            throw new Exception('CLOUDINARY_URL is not configured. Set it in .env and run php artisan config:cache');
+            throw new Exception('CLOUDINARY_URL is not set. Add it to .env and run php artisan config:clear');
         }
 
         $this->cloudinary = new Cloudinary($url);
