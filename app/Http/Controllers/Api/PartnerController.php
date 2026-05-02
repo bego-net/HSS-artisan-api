@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Partner;
 use App\Services\CloudinaryService;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Throwable;
 
 class PartnerController extends Controller
 {
@@ -36,7 +36,7 @@ class PartnerController extends Controller
             ]);
 
             return response()->json($partner, 201);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'Failed to upload logo.',
                 'error'   => $e->getMessage(),
@@ -68,12 +68,10 @@ class PartnerController extends Controller
             if ($request->hasFile('logo')) {
                 $cloudinary = new CloudinaryService();
 
-                // Delete old logo from Cloudinary
                 if ($partner->public_id) {
                     $cloudinary->destroy($partner->public_id);
                 }
 
-                // Upload new logo
                 $uploaded = $cloudinary->upload($request->file('logo')->getRealPath(), 'hawi/partners');
                 $partner->logo      = $uploaded['url'];
                 $partner->public_id = $uploaded['public_id'];
@@ -82,7 +80,7 @@ class PartnerController extends Controller
             $partner->save();
 
             return response()->json($partner);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'Failed to update partner.',
                 'error'   => $e->getMessage(),
@@ -95,7 +93,6 @@ class PartnerController extends Controller
         $partner = Partner::findOrFail($id);
 
         try {
-            // Delete logo from Cloudinary
             if ($partner->public_id) {
                 $cloudinary = new CloudinaryService();
                 $cloudinary->destroy($partner->public_id);
@@ -104,7 +101,7 @@ class PartnerController extends Controller
             $partner->delete();
 
             return response()->json(['message' => 'Partner deleted successfully']);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'Failed to delete partner.',
                 'error'   => $e->getMessage(),

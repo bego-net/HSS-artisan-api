@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Service;
 use App\Services\CloudinaryService;
-use Exception;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Throwable;
 
 class ServiceController extends Controller
 {
@@ -51,7 +51,6 @@ class ServiceController extends Controller
         ]);
 
         try {
-            // Handle image upload via Cloudinary
             if ($request->hasFile('image')) {
                 $cloudinary = new CloudinaryService();
                 $uploaded   = $cloudinary->upload($request->file('image')->getRealPath(), 'hawi/services');
@@ -70,10 +69,10 @@ class ServiceController extends Controller
         } catch (UniqueConstraintViolationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'A service with this title (or slug) already exists. Please use a different title.',
+                'message' => 'A service with this title (or slug) already exists.',
                 'errors'  => ['title' => ['A service with this title already exists.']],
             ], 422);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create service.',
@@ -154,7 +153,6 @@ class ServiceController extends Controller
         ]);
 
         try {
-            // Handle image upload — delete old from Cloudinary, upload new
             if ($request->hasFile('image')) {
                 $cloudinary = new CloudinaryService();
 
@@ -177,10 +175,10 @@ class ServiceController extends Controller
         } catch (UniqueConstraintViolationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'A service with this title (or slug) already exists. Please use a different title.',
+                'message' => 'A service with this title (or slug) already exists.',
                 'errors'  => ['title' => ['A service with this title already exists.']],
             ], 422);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update service.',
@@ -211,7 +209,6 @@ class ServiceController extends Controller
         }
 
         try {
-            // Delete image from Cloudinary
             if ($service->public_id) {
                 $cloudinary = new CloudinaryService();
                 $cloudinary->destroy($service->public_id);
@@ -224,7 +221,7 @@ class ServiceController extends Controller
                 'message' => 'Service deleted successfully',
                 'data'    => null,
             ], 200);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete service.',

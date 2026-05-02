@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Testimonial;
 use App\Services\CloudinaryService;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Throwable;
 
 class TestimonialController extends Controller
 {
@@ -40,7 +40,7 @@ class TestimonialController extends Controller
             ]);
 
             return response()->json($testimonial, 201);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'Failed to upload image.',
                 'error'   => $e->getMessage(),
@@ -82,12 +82,10 @@ class TestimonialController extends Controller
             if ($request->hasFile('image')) {
                 $cloudinary = new CloudinaryService();
 
-                // Delete old image from Cloudinary
                 if ($testimonial->public_id) {
                     $cloudinary->destroy($testimonial->public_id);
                 }
 
-                // Upload new image
                 $uploaded = $cloudinary->upload($request->file('image')->getRealPath(), 'hawi/testimonials');
                 $testimonial->image     = $uploaded['url'];
                 $testimonial->public_id = $uploaded['public_id'];
@@ -96,7 +94,7 @@ class TestimonialController extends Controller
             $testimonial->save();
 
             return response()->json($testimonial);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'Failed to update testimonial.',
                 'error'   => $e->getMessage(),
@@ -109,7 +107,6 @@ class TestimonialController extends Controller
         $testimonial = Testimonial::findOrFail($id);
 
         try {
-            // Delete image from Cloudinary
             if ($testimonial->public_id) {
                 $cloudinary = new CloudinaryService();
                 $cloudinary->destroy($testimonial->public_id);
@@ -118,7 +115,7 @@ class TestimonialController extends Controller
             $testimonial->delete();
 
             return response()->json(['message' => 'Testimonial deleted successfully']);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'Failed to delete testimonial.',
                 'error'   => $e->getMessage(),

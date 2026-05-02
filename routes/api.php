@@ -28,6 +28,35 @@ Route::get('/partners/{id}', [PartnerController::class, 'show']);
 // Contact form (public — no auth required)
 Route::post('/contact', [ContactController::class, 'store']);
 
+// Debug: test Cloudinary config (remove after debugging)
+Route::get('/debug/cloudinary', function () {
+    try {
+        $url = config('cloudinary.url');
+        if (! $url) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'CLOUDINARY_URL not set in config',
+                'env_direct' => env('CLOUDINARY_URL') ? 'env() has value' : 'env() is null too',
+            ]);
+        }
+
+        $service = new \App\Services\CloudinaryService();
+        $ping    = $service->ping();
+
+        return response()->json([
+            'status'         => 'ok',
+            'cloudinary_url' => substr($url, 0, 30) . '...',
+            'ping'           => $ping,
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status'  => 'error',
+            'message' => $e->getMessage(),
+            'class'   => get_class($e),
+        ]);
+    }
+});
+
 // ──────────────────────────────────────────────
 // Admin auth
 // ──────────────────────────────────────────────

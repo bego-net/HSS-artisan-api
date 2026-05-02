@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Services\CloudinaryService;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Throwable;
 
 class ProductController extends Controller
 {
@@ -38,7 +38,7 @@ class ProductController extends Controller
             ]);
 
             return response()->json($product, 201);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'Failed to upload image.',
                 'error'   => $e->getMessage(),
@@ -75,12 +75,10 @@ class ProductController extends Controller
             if ($request->hasFile('image')) {
                 $cloudinary = new CloudinaryService();
 
-                // Delete old image from Cloudinary
                 if ($product->public_id) {
                     $cloudinary->destroy($product->public_id);
                 }
 
-                // Upload new image
                 $uploaded = $cloudinary->upload($request->file('image')->getRealPath(), 'hawi/products');
                 $product->image     = $uploaded['url'];
                 $product->public_id = $uploaded['public_id'];
@@ -89,7 +87,7 @@ class ProductController extends Controller
             $product->save();
 
             return response()->json($product);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'Failed to update product.',
                 'error'   => $e->getMessage(),
@@ -102,7 +100,6 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         try {
-            // Delete image from Cloudinary
             if ($product->public_id) {
                 $cloudinary = new CloudinaryService();
                 $cloudinary->destroy($product->public_id);
@@ -111,7 +108,7 @@ class ProductController extends Controller
             $product->delete();
 
             return response()->json(['message' => 'Product deleted successfully']);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'Failed to delete product.',
                 'error'   => $e->getMessage(),
